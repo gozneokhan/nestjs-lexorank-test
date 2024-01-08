@@ -3,8 +3,10 @@ import { LexoRank } from 'lexorank';
 
 @Injectable()
 export class AppService {
-  items = [
-    //* 항목 목록
+  insert(_data: string) {
+    throw new Error('Method not implemented.');
+  }
+  items: { data: string; lexo: LexoRank }[] = [
     { data: 'item1', lexo: null },
     { data: 'item2', lexo: null },
     { data: 'item3', lexo: null },
@@ -14,68 +16,41 @@ export class AppService {
     { data: 'item7', lexo: null },
   ];
 
-  //* LexoRank로 항목 찾기
+  constructor() {
+    let lexoRank = LexoRank.middle();
+    this.items.map((item) => {
+      item.lexo = lexoRank;
+      lexoRank = lexoRank.genPrev();
+    });
+  }
+
+  //! lexo 값 출력
   find() {
-    this.items.sort((a, b) => {
-      if (a.lexo && b.lexo) {
+    const newItems = this.items
+      .sort((a, b) => {
         return a.lexo.compareTo(b.lexo);
-      }
-      return 0;
-    });
+      })
+      .map((item) => {
+        return { data: item.data, lexo: item.lexo.toString() };
+      });
 
-    return this.items;
+    return newItems;
   }
 
-  //* 새로운 항목을 삽입
-  insert(data: string) {
-    const newLexoRank = LexoRank.middle();
+  //! 위치 이동
+  move(id: number, where: number) {
+    let newLexo: LexoRank;
 
-    const newItem = {
-      data: data,
-      lexo: newLexoRank,
-    };
-
-    this.items.push(newItem);
-
-    //* LexoRank에 따라 항목 정렬
-    this.items.sort((a, b) => {
-      if (a.lexo && b.lexo) {
-        return a.lexo.compareTo(b.lexo);
-      }
-      return 0;
-    });
-  }
-
-  //* 항목 이동
-  move(sourceIndex: number, destionationIndex: number) {
-    //* 인덱스 유효성 검사
-    if (
-      sourceIndex < 0 ||
-      sourceIndex >= this.items.length ||
-      destionationIndex < 0 ||
-      destionationIndex >= this.items.length
-    ) {
-      throw new Error('사용 불가능한 인덱스입니다.');
+    if (where >= this.items.length) {
+      newLexo = this.items[this.items.length - 1].lexo.genNext();
+    } else if (where <= 0) {
+      newLexo = this.items[0].lexo.genPrev();
+    } else {
+      newLexo = this.items[where].lexo.between(this.items[where + 1].lexo);
     }
 
-    //* 이동할 항목 가져오기
-    const itemToMove = this.items[sourceIndex];
+    this.items[id].lexo = newLexo;
 
-    //* 해당 인덱스의 항목 삭제
-    this.items.splice(sourceIndex, 1);
-
-    //* 목표 위치에 항목 삽입
-    this.items.splice(destionationIndex, 0, itemToMove);
-
-    //* LexoRank에 따라 항목 정렬
-    this.items.sort((a, b) => {
-      if (a.lexo && b.lexo) {
-        return a.lexo.compareTo(b.lexo);
-      }
-      return 0;
-    });
+    return true;
   }
 }
-
-//! LexoRank에 따라 정렬 시키는 함수 사용 방법
-//! appService.move(0, 2); 첫 번째 항목을 세 번째로 이동

@@ -25,16 +25,20 @@ export class AppController {
     return this.appService.find();
   }
 
-  @Post('/items/move')
-  moveItem(
-    @Body('sourceIndex') sourceIndex: number,
-    @Body('destinationIndex') destinationIndex: number,
-  ) {
-    if (isNaN(sourceIndex) || isNaN(destinationIndex)) {
-      throw new BadRequestException('유효하지 않은 인덱스입니다');
+  @Post('items/move')
+  moveItem(@Body('itemId') itemId: number, @Body('whereId') whereId: number) {
+    if (
+      isNaN(itemId) ||
+      isNaN(whereId) ||
+      whereId < 0 ||
+      whereId >= this.appService.items.length
+    ) {
+      throw new BadRequestException(
+        '유효하지 않은 데이터 또는 인덱스 값입니다.',
+      );
     }
 
-    this.appService.move(sourceIndex, destinationIndex);
+    this.appService.move(itemId, whereId);
     return this.appService.find();
   }
 }
